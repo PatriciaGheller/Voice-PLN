@@ -11,22 +11,29 @@ load_dotenv()  # carrega variáveis do .env
 # API de Clima (OpenWeather)
 # ==========================
 def previsao_tempo(cidade="Vila Valério"):
-    chave_api = os.getenv("OPENWEATHER_KEY")  # pega do .env
+    chave_api = os.getenv("OPENWEATHER_KEY")
+    if not chave_api:
+        erro = "Chave da API OpenWeather não encontrada no .env."
+        falar(erro)
+        return erro
+
     url = f"http://api.openweathermap.org/data/2.5/weather?q={cidade}&appid={chave_api}&lang=pt_br&units=metric"
     resposta = requests.get(url).json()
 
-    if "weather" in resposta and "main" in resposta:
+    if resposta.get("cod") == 200:
         clima = resposta["weather"][0]["description"]
         temp = resposta["main"]["temp"]
+        mensagem = f"{cidade}: {clima}, {temp}°C"
         falar(f"A previsão para {cidade} é de {clima}, com temperatura de {temp} graus Celsius.")
-        return f"{cidade}: {clima}, {temp}°C"
+        return mensagem
     else:
-        return "Não foi possível obter a previsão do tempo."
+        erro = f"Não foi possível obter a previsão do tempo: {resposta.get('message', 'Erro desconhecido')}"
+        falar(erro)
+        return erro
 
 # Função auxiliar para extrair cidade da frase
 def extrair_cidade(frase):
     palavras = frase.split()
-    # procura "em", "no" ou "na" e pega o que vem depois
     for preposicao in ["em", "no", "na"]:
         if preposicao in palavras:
             indice = palavras.index(preposicao)
@@ -40,38 +47,70 @@ def previsao_tempo_por_fala(frase):
     if cidade:
         return previsao_tempo(cidade)
     else:
-        return previsao_tempo()  # usa padrão se não encontrar cidade
+        return previsao_tempo()
 
 # ==========================
 # API de Música (Spotify)
 # ==========================
 def tocar_playlist():
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-        client_id=os.getenv("SPOTIFY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
-        redirect_uri="http://localhost:8888/callback",
-        scope="user-modify-playback-state"
-    ))
-    playlist_uri = f"spotify:playlist:{os.getenv('SPOTIFY_PLAYLIST_ID')}"
-    sp.start_playback(context_uri=playlist_uri)
-    falar("Tocando sua playlist favorita no Spotify.")
-    return "Spotify: Playlist iniciada"
+    try:
+        sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+            client_id=os.getenv("SPOTIFY_CLIENT_ID"),
+            client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
+            redirect_uri="http://127.0.0.1:8888/callback",
+            scope="user-modify-playback-state"
+        ))
+        playlist_id = os.getenv("SPOTIFY_PLAYLIST_ID")
+        if not playlist_id:
+            erro = "ID da playlist não configurado no .env."
+            falar(erro)
+            return erro
+
+        playlist_uri = f"spotify:playlist:{playlist_id}"
+        sp.start_playback(context_uri=playlist_uri)
+        falar("Tocando sua playlist favorita no Spotify.")
+        return "Spotify: Playlist iniciada"
+    except Exception as e:
+        erro = f"Erro ao tocar playlist: {e}"
+        falar(erro)
+        return erro
 
 # ==========================
 # API de Notícias (NewsAPI)
 # ==========================
 def ultimas_noticias():
     chave_api = os.getenv("NEWSAPI_KEY")
-    url = f"https://newsapi.org/v2/top-headlines?country=br&apiKey={chave_api}"
+    if not chave_api:
+        erro = "Chave da API NewsAPI não encontrada no .env."
+        falar(erro)
+        return erro
+
+    # Se for Brasil, usa busca por palavra-chave
+    url = f"https://newsapi.org/v2/everything?q=Brasil&language=pt&apiKey={chave_api}"
     resposta = requests.get(url).json()
 
-    if "articles" in resposta:
-        artigos = resposta["articles"][:3]
-        titulos = []
-        for noticia in artigos:
-            titulo = noticia.get("title", "Sem título")
-            titulos.append(titulo)
-            falar(f"Notícia: {titulo}")
-        return titulos
+    if resposta.get("status") == "ok" and "articles" in resposta:
+        artigos = resposta.get("articles", [])[:5]
+        if not artigos:
+            erro = "Nenhuma notícia disponível no momento."
+            falar(erro)
+            return erro
+
+        titulos = [art.get("title", "Sem título") for art in artigos]
+
+        # Áudio: fala só o primeiro título
+        primeiro_titulo = titulos[0]
+        falar(f"Última notícia: {primeiro_titulo}")
+
+        # Texto: retorna todos os títulos separados por linha
+        return "\n".join(titulos)
+
+    elif resposta.get("status") == "error":
+        erro = f"Erro da NewsAPI: {resposta.get('code', '')} - {resposta.get('message', 'Mensagem não informada')}"
+        falar("Erro ao buscar notícias.")
+        return erro
+
     else:
-        return ["Não foi possível obter as últimas notícias."]
+        erro = "Não foi possível obter as últimas notícias (resposta inesperada)."
+        falar(erro)
+        return erro
