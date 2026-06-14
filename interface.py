@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QStatusBar
 from PyQt5.QtGui import QIcon
 from feedback import mensagem_boas_vindas
+from reconhecimento import ouvir_microfone
 
 class VoicePLNApp(QWidget):
     def __init__(self):
@@ -16,7 +17,7 @@ class VoicePLNApp(QWidget):
         # Layout principal
         layout = QVBoxLayout()
 
-        # Mensagem de boas-vindas
+        # Mensagem de boas-vindas sonora
         mensagem_boas_vindas()
 
         # Botão iniciar/parar
@@ -43,10 +44,14 @@ class VoicePLNApp(QWidget):
         self.setLayout(layout)
 
     def iniciar_captura(self):
-        # Aqui futuramente chamaremos reconhecimento.py
         self.status_bar.showMessage("🎤 Ouvindo...")
-        self.text_area.append("Simulação: Você disse 'Abrir Excel'")
-        self.status_bar.showMessage("✅ Comando executado")
+        reconhecido = ouvir_microfone()  # Chama reconhecimento.py
+        if reconhecido:
+            self.text_area.append(f"Você disse: {reconhecido}")
+            self.status_bar.showMessage("✅ Comando executado")
+        else:
+            self.text_area.append("Não entendi o que você disse.")
+            self.status_bar.showMessage("⚠️ Tente novamente")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
