@@ -1,5 +1,11 @@
 import speech_recognition as sr
-import os
+from comandos import (
+    abrir_navegador,
+    abrir_excel,
+    abrir_powerpoint,
+    abrir_edge,
+    fechar_programa
+)
 
 # Função para ouvir e reconhecer a fala
 def ouvir_microfone():
@@ -20,16 +26,15 @@ def ouvir_microfone():
 
         # Executa comandos conforme palavras-chave
         if "navegador" in frase:
-            os.system("start chrome.exe")
+            abrir_navegador()
         elif "Excel" in frase:
-            os.system("start excel.exe")
+            abrir_excel()
         elif "PowerPoint" in frase:
-            os.system("start powerpnt.exe")
+            abrir_powerpoint()
         elif "Edge" in frase:
-            os.system("start msedge.exe")
+            abrir_edge()
         elif "Fechar" in frase:
-            print("Encerrando programa...")
-            return True
+            return fechar_programa()
 
     except sr.UnknownValueError:
         print("Não entendi o que você disse.")
