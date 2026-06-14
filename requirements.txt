@@ -1,3 +1,5 @@
-speechrecognition
-pyttsx3
-pyaudio
+speechrecognition==3.10.0
+pyttsx3==2.90
+PyQt5==5.15.9
+requests==2.31.0
+spotipy==2.23.0
