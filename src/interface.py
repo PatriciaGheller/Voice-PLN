@@ -85,6 +85,7 @@ class VoicePLNApp(QWidget):
                 self.text_area.append(str(resultado))
             self.status_bar.showMessage("✅ Comando executado")
         except Exception as e:
+            print("Erro capturado:", e)
             self.text_area.append(f"Erro: {e}")
             self.status_bar.showMessage("⚠️ Falha ao executar comando")
 
