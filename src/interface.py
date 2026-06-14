@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextEdit, QStatusBar
 from PyQt5.QtGui import QIcon
-from src.feedback import mensagem_boas_vindas
+from src.feedback import mensagem_boas_vindas, falar
 from src.reconhecimento import ouvir_microfone
 from src.apis import previsao_tempo, tocar_playlist, ultimas_noticias
 from src.comandos import abrir_navegador, abrir_excel
@@ -20,7 +20,10 @@ class VoicePLNApp(QWidget):
         layout = QVBoxLayout()
 
         # Mensagem de boas-vindas sonora
-        mensagem_boas_vindas()
+        try:
+            mensagem_boas_vindas()
+        except Exception as e:
+            print("Erro na mensagem de boas-vindas:", e)
 
         # Botão iniciar/parar (microfone)
         self.btn_iniciar = QPushButton("Iniciar Captura de Voz")
@@ -46,6 +49,7 @@ class VoicePLNApp(QWidget):
 
         self.btn_noticias = QPushButton("Últimas Notícias")
         self.btn_noticias.setIcon(QIcon("assets/icons/noticias.png"))
+        # Corrigido: chama direto ultimas_noticias sem depender do microfone
         self.btn_noticias.clicked.connect(lambda: self.executar_funcao(ultimas_noticias))
         layout.addWidget(self.btn_noticias)
 
@@ -69,13 +73,19 @@ class VoicePLNApp(QWidget):
 
     def iniciar_captura(self):
         self.status_bar.showMessage("🎤 Ouvindo...")
-        reconhecido = ouvir_microfone()  # Chama reconhecimento.py
-        if reconhecido:
-            self.text_area.append(f"Você disse: {reconhecido}")
-            self.status_bar.showMessage("✅ Comando executado")
-        else:
-            self.text_area.append("Não entendi o que você disse.")
-            self.status_bar.showMessage("⚠️ Tente novamente")
+        try:
+            reconhecido = ouvir_microfone()  # Chama reconhecimento.py
+            if reconhecido:
+                self.text_area.append(f"Você disse: {reconhecido}")
+                self.status_bar.showMessage("✅ Comando executado")
+            else:
+                self.text_area.append("Não entendi o que você disse.")
+                self.status_bar.showMessage("⚠️ Tente novamente")
+        except Exception as e:
+            print("Erro capturado na captura de voz:", e)
+            self.text_area.append(f"Erro ao capturar voz: {e}")
+            self.status_bar.showMessage("⚠️ Falha ao capturar voz")
+            falar("Erro ao capturar voz.")
 
     def executar_funcao(self, funcao):
         """Executa uma função e mostra o resultado na área de texto"""
@@ -88,6 +98,7 @@ class VoicePLNApp(QWidget):
             print("Erro capturado:", e)
             self.text_area.append(f"Erro: {e}")
             self.status_bar.showMessage("⚠️ Falha ao executar comando")
+            falar("Erro ao executar comando.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
