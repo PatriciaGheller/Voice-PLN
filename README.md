@@ -23,6 +23,22 @@ Ele combina **SpeechRecognition**, **PyQt5** para interface gráfica, e integra�
   - Ícones (armazenados na pasta `assets/`) para cada comando.
 - Feedback sonoro com **pyttsx3** (mensagens de boas-vindas e confirmações).
 
+
+## 🔎 Como cada botão funciona
+
+- 🎤 Microfone → `inicia a captura de voz` e mostra o que você disse.
+
+- 🌦️ Clima → `chama previsao_tempo()` e mostra o resultado.
+
+- 📰 Notícias → `chama ultimas_noticias()` e exibe as manchetes.
+
+- 🎵 Música → `chama tocar_playlist()` e inicia sua playlist.
+
+- 🌐 Navegador → `chama abrir_navegador()` e abre o browser.
+
+- 📊 Excel → `chama abrir_excel()` e abre o Excel.
+
+
 ---
 
 ## 📂 Estrutura do Projeto
