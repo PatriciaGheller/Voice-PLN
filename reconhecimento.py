@@ -1,26 +1,16 @@
 import speech_recognition as sr
-from comandos import (
-    abrir_navegador,
-    abrir_excel,
-    abrir_powerpoint,
-    abrir_edge,
-    fechar_programa
-)
+import os
+from comandos import abrir_navegador, abrir_excel, abrir_powerpoint, abrir_edge, fechar_programa
+from apis import previsao_tempo, tocar_playlist, ultimas_noticias
 
-# Função para ouvir e reconhecer a fala
 def ouvir_microfone():
     microfone = sr.Recognizer()
-
     with sr.Microphone() as source:
-        # Reduz ruídos do ambiente
         microfone.adjust_for_ambient_noise(source)
         print("Diga alguma coisa: ")
-
-        # Captura o áudio
         audio = microfone.listen(source)
 
     try:
-        # Reconhece a fala usando o Google
         frase = microfone.recognize_google(audio, language='pt-BR')
         print("Você disse: " + frase)
 
@@ -35,10 +25,18 @@ def ouvir_microfone():
             abrir_edge()
         elif "Fechar" in frase:
             return fechar_programa()
+        elif "clima" in frase:
+            return previsao_tempo()
+        elif "notícias" in frase:
+            return ultimas_noticias()
+        elif "música" in frase or "playlist" in frase:
+            return tocar_playlist()
+
+        return frase
 
     except sr.UnknownValueError:
         print("Não entendi o que você disse.")
+        return None
     except sr.RequestError:
         print("Erro ao se conectar com o serviço de reconhecimento.")
-
-    return False
+        return None
